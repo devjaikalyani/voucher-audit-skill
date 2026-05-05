@@ -21,16 +21,16 @@ so the admin can stay consistent.
 ```json
 {
   "voucher_no": "3315",
-  "voucher_date": "2026-03-23",
-  "employee_code": "RWSIPL570",
-  "employee_name": "Jai Dutt Sharma",
+  "voucher_date": "2025-03-23",
+  "employee_code": "IPL570",
+  "employee_name": "Dev Sharma",
   "designation": "General Manager",
   "final_total_approved": 18000,
   "admin_reasoning": "Hotel reduced to VP/GM grade-C cap Rs.1500/night. Cruise approved as VP/GM had pre-approved client visit.",
-  "recorded_at": "2026-04-28T10:00:00",
+  "recorded_at": "2025-04-28T10:00:00",
   "decisions": [
     {
-      "date": "2026-03-13",
+      "date": "2025-03-13",
       "expense_head": "Hotel",
       "claimed": 15120,
       "reviewer_approved": 15120,
