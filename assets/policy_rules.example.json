@@ -1,0 +1,143 @@
+{
+  "policy_name": "Example Company Travel & Reimbursement Policy",
+  "effective_date": "2024-01-01",
+  "version": "v1.0",
+  "max_claim_period_days": 90,
+  "manager_approval_threshold_inr": 10000,
+  "flag_duplicate_receipts": true,
+  "no_handwritten_receipts": true,
+  "city_grades": {
+    "A": {
+      "label": "Metro & Tier 1",
+      "cities": ["DELHI", "NEW DELHI", "MUMBAI", "KOLKATA", "CHENNAI", "AHMEDABAD", "BANGALORE", "BENGALURU", "HYDERABAD", "JAIPUR", "PUNE"]
+    },
+    "B": {
+      "label": "State Capitals & Tier II",
+      "cities": [
+        "AGRA", "AMRITSAR", "BARODA", "VADODARA", "FARIDABAD", "GHAZIABAD",
+        "INDORE", "JABALPUR", "JAMSHEDPUR", "KANPUR", "KOCHI", "MYSURU",
+        "NAGPUR", "SURAT", "VISAKHAPATNAM", "LUCKNOW", "PATNA",
+        "BHOPAL", "RAIPUR", "RANCHI", "DEHRADUN", "GANDHINAGAR", "BHUBANESWAR",
+        "THIRUVANANTHAPURAM", "SHIMLA", "SRINAGAR", "GUWAHATI",
+        "CHANDIGARH", "NASHIK", "AURANGABAD", "SOLAPUR", "KOLHAPUR"
+      ]
+    },
+    "C": {
+      "label": "All other cities",
+      "cities": "*"
+    }
+  },
+  "designations": {
+    "DIRECTOR_CFO": {
+      "aliases": ["DIRECTOR", "CFO", "MD AND CEO", "CHIEF FINANCE OFFICER", "MANAGING DIRECTOR"],
+      "level": 100,
+      "hotel": {"A": "actual", "B": "actual", "C": "actual"},
+      "food_with_stay": "actual",
+      "food_without_stay_over_12hr": "actual",
+      "travel_class": "actual",
+      "conveyance": "actual"
+    },
+    "VP_GM": {
+      "aliases": ["VICE PRESIDENT", "VP", "GENERAL MANAGER", "GM", "ASSISTANT GENERAL MANAGER"],
+      "level": 90,
+      "hotel": {"A": 3000, "B": 2000, "C": 1500},
+      "food_with_stay": 750,
+      "food_without_stay_over_12hr": 375,
+      "travel_class": "Flight up to Rs.5000 (>500 km, prior approval if more); 1AC/2AC Train",
+      "conveyance": "4 wheeler"
+    },
+    "SR_MANAGER": {
+      "aliases": ["SENIOR MANAGER", "SR MANAGER", "REGIONAL MANAGER", "ACCOUNTS MANAGER"],
+      "level": 80,
+      "hotel": {"A": 2000, "B": 1500, "C": 1000},
+      "food_with_stay": 600,
+      "food_without_stay_over_12hr": 300,
+      "travel_class": "2AC Train / Bus AC",
+      "conveyance": "4 wheeler"
+    },
+    "MANAGER": {
+      "aliases": ["MANAGER", "PROJECT MANAGER", "BUSINESS DEVELOPMENT MANAGER"],
+      "level": 70,
+      "hotel": {"A": 1500, "B": 1200, "C": 750},
+      "food_with_stay": 500,
+      "food_without_stay_over_12hr": 250,
+      "travel_class": "3AC Train / AC Bus",
+      "conveyance": "Auto / 2 wheeler / 4 wheeler"
+    },
+    "ASST_MANAGER": {
+      "aliases": ["ASSISTANT MANAGER", "ASST MANAGER", "DEPUTY MANAGER"],
+      "level": 60,
+      "hotel": {"A": 1200, "B": 1000, "C": 750},
+      "food_with_stay": 500,
+      "food_without_stay_over_12hr": 250,
+      "travel_class": "3AC Train / AC Bus",
+      "conveyance": "Auto / 2 wheeler"
+    },
+    "SR_EXECUTIVE": {
+      "aliases": ["SENIOR EXECUTIVE", "SR EXECUTIVE", "EXECUTIVE", "SUPERVISOR", "SITE ENGINEER", "PROJECT ENGINEER", "ACCOUNTANT", "MIS EXECUTIVE", "OFFICE ASSISTANT"],
+      "level": 50,
+      "hotel": {"A": 1100, "B": 1000, "C": 750},
+      "food_with_stay": 400,
+      "food_without_stay_over_12hr": 200,
+      "travel_class": "Sleeper Class Train / Non-AC Bus",
+      "conveyance": "2 wheeler / Auto / Share Auto"
+    },
+    "TECHNICIAN": {
+      "aliases": ["TECHNICIAN", "TRAINEE", "PLUMBER", "ELECTRICIAN", "DRIVER", "HELPER", "STORE KEEPER"],
+      "level": 40,
+      "hotel": {"A": 1000, "B": 900, "C": 700},
+      "food_with_stay": 400,
+      "food_without_stay_over_12hr": 200,
+      "travel_class": "Sleeper Class Train / Non-AC Bus",
+      "conveyance": "2 wheeler / Auto / Share Auto"
+    }
+  },
+  "site_deputation_30_plus_days": {
+    "applies_when": "Employee deputed on site for more than 30 days AND no company guest house arrangement",
+    "applies_to": "Project Manager grade and above when monthly travel > 15 days (max Rs.7000)",
+    "lodging_caps": {
+      "PROJECT_MANAGER": {"A": 12000, "B": 10000, "C": 8000, "fooding": 7000},
+      "ASST_MANAGER":    {"A": 10500, "B": 9000,  "C": 7000, "fooding": 6000},
+      "ENGINEER":        {"A": 9000,  "B": 7500,  "C": 5000, "fooding": 5000},
+      "TECHNICIAN":      {"A": 7000,  "B": 5500,  "C": 4000, "fooding": 4000}
+    },
+    "note": "If travel >15 days/month, fixed fooding policy applies, max Rs.7000 for Project Manager and above"
+  },
+  "petrol_charges": {
+    "bike_per_km": 3,
+    "car_per_km": 9
+  },
+  "proof_requirements": {
+    "hotel":            ["Hotel tax invoice / bill", "Payment receipt"],
+    "train":            ["PNR / e-ticket", "Receipt or fare proof"],
+    "bus":              ["Bus ticket", "Receipt"],
+    "flight":           ["Boarding pass or e-ticket", "Receipt"],
+    "cab_auto":         ["Cab/auto receipt with ride ID, route, amount, date"],
+    "food_with_stay":   ["Per-diem - no bills required, claim eligible only with overnight stay proof"],
+    "food_without_stay":["Per-diem (over 12 hrs) - duration proof"],
+    "other_expense":    ["Original receipt mandatory; monthly limit Rs.5,000"]
+  },
+  "category_rules": {
+    "hospitality_entertainment": {
+      "description": "Client/official entertainment, meals for external officials",
+      "policy_status": "NOT covered under standard travel policy",
+      "approval_required": "VP / GM pre-approval mandatory",
+      "monthly_limit_inr": 5000,
+      "audit_action": "Flag CONDITIONAL with note 'requires senior management pre-approval'"
+    },
+    "duplicate_receipts": {
+      "rule": "Detect by ride ID, invoice number, txn ID, or exact amount+date+vendor match",
+      "action": "REJECT duplicate; keep one valid copy"
+    },
+    "weak_proof_train": {
+      "rule": "Internal debit voucher alone is insufficient for 2AC/1AC train claims",
+      "action": "Flag CONDITIONAL pending PNR/e-ticket"
+    },
+    "checkout_day_food": {
+      "rule": "On checkout day with no overnight stay, only without-stay (>12 hrs) rate applies",
+      "action": "Reduce to half-day rate per designation"
+    }
+  },
+  "audit_severity_levels": ["HIGH", "MEDIUM", "LOW"],
+  "audit_status_values": ["APPROVE", "CONDITIONAL", "FLAG", "REJECT"]
+}
