@@ -1,0 +1,453 @@
+{
+  "audit_metadata": {
+    "audit_reference": "AUD-POL-1001-2024",
+    "report_date": "2024-03-12",
+    "policy_version": "Example Company Travel & Reimbursement Policy (effective 2024-01-01)"
+  },
+  "voucher": {
+    "voucher_no": "1001",
+    "voucher_date": "2024-03-10",
+    "employee_name": "Priya Mehta",
+    "employee_code": "SAMPLE001",
+    "cost_center": "Head Office",
+    "period_from": "2024-03-01",
+    "period_to": "2024-03-08",
+    "narration": "Pune Client Visit",
+    "currency": "INR",
+    "gross_claimed": 10090.0,
+    "gross_approved_by_reviewer": 9770.0,
+    "gross_rejected": 320.0,
+    "net_payable": 9770.0,
+    "line_items": [
+      {
+        "date": "2024-03-01",
+        "expense_head_raw": "3 AC train",
+        "expense_head": "3AC Train",
+        "remarks": "Delhi to Pune onward journey",
+        "claimed_inr": 1400.0,
+        "approved_by_reviewer_inr": 1400.0,
+        "rejected_inr": 0.0
+      },
+      {
+        "date": "2024-03-02",
+        "expense_head_raw": "Hotel",
+        "expense_head": "Hotel",
+        "remarks": "2 nights stay at hotel in Pune",
+        "claimed_inr": 4800.0,
+        "approved_by_reviewer_inr": 4800.0,
+        "rejected_inr": 0.0
+      },
+      {
+        "date": "2024-03-03",
+        "expense_head_raw": "Food Allowance",
+        "expense_head": "Food Allowance",
+        "remarks": "",
+        "claimed_inr": 700.0,
+        "approved_by_reviewer_inr": 700.0,
+        "rejected_inr": 0.0
+      },
+      {
+        "date": "2024-03-04",
+        "expense_head_raw": "Food Allowance",
+        "expense_head": "Food Allowance",
+        "remarks": "",
+        "claimed_inr": 700.0,
+        "approved_by_reviewer_inr": 700.0,
+        "rejected_inr": 0.0
+      },
+      {
+        "date": "2024-03-04",
+        "expense_head_raw": "Other Expense",
+        "expense_head": "Other Expense",
+        "remarks": "Cab from hotel to client office",
+        "claimed_inr": 320.0,
+        "approved_by_reviewer_inr": 320.0,
+        "rejected_inr": 0.0
+      },
+      {
+        "date": "2024-03-04",
+        "expense_head_raw": "Other Expense",
+        "expense_head": "Other Expense",
+        "remarks": "Cab return (duplicate)",
+        "claimed_inr": 320.0,
+        "approved_by_reviewer_inr": 0.0,
+        "rejected_inr": 320.0
+      },
+      {
+        "date": "2024-03-05",
+        "expense_head_raw": "Other Expense",
+        "expense_head": "Other Expense",
+        "remarks": "Stationery for client meeting",
+        "claimed_inr": 450.0,
+        "approved_by_reviewer_inr": 450.0,
+        "rejected_inr": 0.0
+      },
+      {
+        "date": "2024-03-08",
+        "expense_head_raw": "3 AC train",
+        "expense_head": "3AC Train",
+        "remarks": "Pune to Delhi return journey",
+        "claimed_inr": 1400.0,
+        "approved_by_reviewer_inr": 1400.0,
+        "rejected_inr": 0.0
+      }
+    ],
+    "source_file": "sample_voucher_1001.pdf"
+  },
+  "employee": {
+    "code": "SAMPLE001",
+    "name_master": "Priya Mehta",
+    "name_voucher": "Priya Mehta",
+    "designation_master": "Senior Manager",
+    "designation_bucket": "SR_MANAGER",
+    "designation_note": "Mapped \"Senior Manager\" -> SR_MANAGER via alias \"SENIOR MANAGER\"",
+    "department": "Business Development",
+    "branch": "Delhi",
+    "name_match": true
+  },
+  "city_grade": {
+    "derived_city": "Pune",
+    "grade": "A",
+    "note": "Pune -> Grade A (Metro & Major Cities)"
+  },
+  "proofs": [
+    {
+      "file_name": "sample_hotel_bill.pdf",
+      "kind": "hotel_bill_printed",
+      "ride_id": null,
+      "invoice_no": "INV-2024-0234",
+      "txn_id": null,
+      "pnr": null,
+      "gstin": "27AABCS1234F1Z5",
+      "vehicle_no": null,
+      "check_in": "2024-03-02",
+      "check_out": "2024-03-04",
+      "nights": 2,
+      "amounts": [4800.0],
+      "amount": 4800.0,
+      "dates": ["2024-03-02", "2024-03-04"],
+      "vendor": "Sample Hotel & Suites",
+      "text_preview": "[OCR] vendor=Sample Hotel & Suites amounts=[4800.0] nights=2 dates=[2024-03-02, 2024-03-04]",
+      "fingerprint": "inv:INV-2024-0234",
+      "duplicate_of": null
+    },
+    {
+      "file_name": "sample_hotel_upi.jpg",
+      "kind": "upi_screenshot",
+      "ride_id": null,
+      "invoice_no": null,
+      "txn_id": "UPI20240304112233",
+      "pnr": null,
+      "gstin": null,
+      "vehicle_no": null,
+      "check_in": null,
+      "check_out": null,
+      "nights": null,
+      "amounts": [4800.0],
+      "amount": 4800.0,
+      "dates": ["2024-03-04"],
+      "vendor": "Sample Hotel & Suites",
+      "text_preview": "[OCR] vendor=Sample Hotel & Suites txn=UPI20240304112233 amounts=[4800.0]",
+      "fingerprint": "id:UPI20240304112233",
+      "duplicate_of": null
+    },
+    {
+      "file_name": "sample_cab_receipt_01.pdf",
+      "kind": "cab_receipt",
+      "ride_id": "RIDE20240304001",
+      "invoice_no": "CAB-INV-9912",
+      "txn_id": null,
+      "pnr": null,
+      "gstin": null,
+      "vehicle_no": "MH12AB1234",
+      "check_in": null,
+      "check_out": null,
+      "nights": null,
+      "amounts": [320.0],
+      "amount": 320.0,
+      "dates": ["2024-03-04"],
+      "vendor": "QuickCab Services",
+      "text_preview": "[OCR] vendor=QuickCab Services ride_id=RIDE20240304001 amounts=[320.0] dates=[2024-03-04]",
+      "fingerprint": "id:RIDE20240304001",
+      "duplicate_of": null
+    },
+    {
+      "file_name": "sample_cab_receipt_02.pdf",
+      "kind": "cab_receipt",
+      "ride_id": "RIDE20240304001",
+      "invoice_no": "CAB-INV-9912",
+      "txn_id": null,
+      "pnr": null,
+      "gstin": null,
+      "vehicle_no": "MH12AB1234",
+      "check_in": null,
+      "check_out": null,
+      "nights": null,
+      "amounts": [320.0],
+      "amount": 320.0,
+      "dates": ["2024-03-04"],
+      "vendor": "QuickCab Services",
+      "text_preview": "[OCR] DUPLICATE of sample_cab_receipt_01.pdf — same ride_id RIDE20240304001",
+      "fingerprint": "id:RIDE20240304001",
+      "duplicate_of": "sample_cab_receipt_01.pdf"
+    },
+    {
+      "file_name": "sample_train_debit_voucher.pdf",
+      "kind": "pdf",
+      "ride_id": null,
+      "invoice_no": null,
+      "txn_id": null,
+      "pnr": null,
+      "gstin": null,
+      "vehicle_no": null,
+      "check_in": null,
+      "check_out": null,
+      "nights": null,
+      "amounts": [1400.0],
+      "amount": 1400.0,
+      "dates": ["2024-03-01"],
+      "vendor": "Internal Debit Voucher",
+      "text_preview": "[OCR] Internal travel debit voucher — amount Rs.1400 — no PNR visible",
+      "fingerprint": "amt:1400.0:2024-03-01",
+      "duplicate_of": null
+    },
+    {
+      "file_name": "sample_misc_receipt.pdf",
+      "kind": "purchase_invoice",
+      "ride_id": null,
+      "invoice_no": "SHOP-0045",
+      "txn_id": null,
+      "pnr": null,
+      "gstin": null,
+      "vehicle_no": null,
+      "check_in": null,
+      "check_out": null,
+      "nights": null,
+      "amounts": [450.0],
+      "amount": 450.0,
+      "dates": ["2024-03-05"],
+      "vendor": "Office Supplies Store",
+      "text_preview": "[OCR] vendor=Office Supplies Store invoice=SHOP-0045 amounts=[450.0] dates=[2024-03-05]",
+      "fingerprint": "inv:SHOP-0045",
+      "duplicate_of": null
+    }
+  ],
+  "findings": [
+    {
+      "date": "2024-03-01",
+      "expense_head": "3AC Train",
+      "expense_head_raw": "3 AC train",
+      "remarks": "Delhi to Pune onward journey",
+      "claimed_inr": 1400.0,
+      "approved_by_reviewer_inr": 1400.0,
+      "rejected_by_reviewer_inr": 0.0,
+      "policy_eligible_inr": 1400.0,
+      "policy_status": "CONDITIONAL",
+      "severity": "MEDIUM",
+      "rule_applied": "Senior Manager grade is entitled to 3AC Train / AC Bus. Actual fare with PNR/e-ticket required.",
+      "proof_required": "PNR / e-ticket + fare receipt",
+      "proof_status": "WEAK",
+      "matched_proofs": [{"file": "sample_train_debit_voucher.pdf", "score": 1}],
+      "audit_note": "Internal debit voucher submitted but no PNR or e-ticket copy provided. Amount of Rs.1,400 is reasonable for a Delhi-Pune 3AC journey. Please provide the PNR to confirm travel.",
+      "recommended_action": "Obtain PNR from employee before final approval."
+    },
+    {
+      "date": "2024-03-02",
+      "expense_head": "Hotel",
+      "expense_head_raw": "Hotel",
+      "remarks": "2 nights stay at hotel in Pune",
+      "claimed_inr": 4800.0,
+      "approved_by_reviewer_inr": 4800.0,
+      "rejected_by_reviewer_inr": 0.0,
+      "policy_eligible_inr": 4000.0,
+      "policy_status": "FLAG",
+      "severity": "HIGH",
+      "rule_applied": "Pune = Grade A city. Senior Manager hotel limit: Rs.2,000/night. 2 nights = Rs.4,000 eligible.",
+      "proof_required": "Hotel bill + receipt",
+      "proof_status": "OK",
+      "matched_proofs": [
+        {"file": "sample_hotel_bill.pdf", "score": 5},
+        {"file": "sample_hotel_upi.jpg", "score": 3}
+      ],
+      "audit_note": "Hotel bill and UPI payment both verified. However, rate of Rs.2,400/night exceeds the Grade A city cap of Rs.2,000/night for Senior Manager grade. 2 nights eligible = Rs.4,000. Overpayment = Rs.800.",
+      "recommended_action": "Recover Rs.800 excess or obtain senior management approval for exception."
+    },
+    {
+      "date": "2024-03-03",
+      "expense_head": "Food Allowance",
+      "expense_head_raw": "Food Allowance",
+      "remarks": "",
+      "claimed_inr": 700.0,
+      "approved_by_reviewer_inr": 700.0,
+      "rejected_by_reviewer_inr": 0.0,
+      "policy_eligible_inr": 600.0,
+      "policy_status": "CONDITIONAL",
+      "severity": "LOW",
+      "rule_applied": "Food allowance with overnight stay: Senior Manager = Rs.600/day.",
+      "proof_required": "Overnight stay proof (hotel bill) — no food bills required",
+      "proof_status": "OK",
+      "matched_proofs": [{"file": "sample_hotel_bill.pdf", "score": 2}],
+      "audit_note": "Claimed Rs.700/day but Senior Manager rate is Rs.600/day. Hotel stay confirmed. Eligible amount is Rs.600. Excess Rs.100 per day.",
+      "recommended_action": "Reduce to Rs.600/day."
+    },
+    {
+      "date": "2024-03-04",
+      "expense_head": "Food Allowance",
+      "expense_head_raw": "Food Allowance",
+      "remarks": "",
+      "claimed_inr": 700.0,
+      "approved_by_reviewer_inr": 700.0,
+      "rejected_by_reviewer_inr": 0.0,
+      "policy_eligible_inr": 600.0,
+      "policy_status": "CONDITIONAL",
+      "severity": "LOW",
+      "rule_applied": "Food allowance with overnight stay: Senior Manager = Rs.600/day.",
+      "proof_required": "Overnight stay proof — no food bills required",
+      "proof_status": "OK",
+      "matched_proofs": [{"file": "sample_hotel_bill.pdf", "score": 2}],
+      "audit_note": "Same as previous day — Rs.700 claimed vs Rs.600 eligible for Senior Manager. Check-out date 04-Mar confirmed by hotel bill.",
+      "recommended_action": "Reduce to Rs.600/day."
+    },
+    {
+      "date": "2024-03-04",
+      "expense_head": "Other Expense",
+      "expense_head_raw": "Other Expense",
+      "remarks": "Cab from hotel to client office",
+      "claimed_inr": 320.0,
+      "approved_by_reviewer_inr": 320.0,
+      "rejected_by_reviewer_inr": 0.0,
+      "policy_eligible_inr": 320.0,
+      "policy_status": "APPROVE",
+      "severity": "LOW",
+      "rule_applied": "Other Expense — actual, receipt mandatory. Monthly limit Rs.5,000.",
+      "proof_required": "Cab receipt with ride ID, route, amount, date",
+      "proof_status": "OK",
+      "matched_proofs": [{"file": "sample_cab_receipt_01.pdf", "score": 5}],
+      "audit_note": "Valid cab receipt. Route, ride ID, amount, and date all verified. Legitimate travel expense.",
+      "recommended_action": ""
+    },
+    {
+      "date": "2024-03-04",
+      "expense_head": "Other Expense",
+      "expense_head_raw": "Other Expense",
+      "remarks": "Cab return (duplicate)",
+      "claimed_inr": 320.0,
+      "approved_by_reviewer_inr": 0.0,
+      "rejected_by_reviewer_inr": 320.0,
+      "policy_eligible_inr": 0.0,
+      "policy_status": "REJECT",
+      "severity": "MEDIUM",
+      "rule_applied": "flag_duplicate_receipts = True. Duplicate submissions are rejected.",
+      "proof_required": "N/A — duplicate of previous entry",
+      "proof_status": "MISSING",
+      "matched_proofs": [{"file": "sample_cab_receipt_02.pdf", "score": 0}],
+      "audit_note": "EXACT DUPLICATE of previous cab entry. Same Ride ID (RIDE20240304001), same invoice, same amount and date. Reviewer correctly rejected this entry.",
+      "recommended_action": "Rejection confirmed. Document for employee record."
+    },
+    {
+      "date": "2024-03-05",
+      "expense_head": "Other Expense",
+      "expense_head_raw": "Other Expense",
+      "remarks": "Stationery for client meeting",
+      "claimed_inr": 450.0,
+      "approved_by_reviewer_inr": 450.0,
+      "rejected_by_reviewer_inr": 0.0,
+      "policy_eligible_inr": 450.0,
+      "policy_status": "APPROVE",
+      "severity": "LOW",
+      "rule_applied": "Other Expense — actual, receipt mandatory. Monthly limit Rs.5,000.",
+      "proof_required": "Original receipt",
+      "proof_status": "OK",
+      "matched_proofs": [{"file": "sample_misc_receipt.pdf", "score": 5}],
+      "audit_note": "Valid printed receipt from vendor. Amount, date, and invoice number verified. Within monthly Rs.5,000 limit.",
+      "recommended_action": ""
+    },
+    {
+      "date": "2024-03-08",
+      "expense_head": "3AC Train",
+      "expense_head_raw": "3 AC train",
+      "remarks": "Pune to Delhi return journey",
+      "claimed_inr": 1400.0,
+      "approved_by_reviewer_inr": 1400.0,
+      "rejected_by_reviewer_inr": 0.0,
+      "policy_eligible_inr": 1400.0,
+      "policy_status": "CONDITIONAL",
+      "severity": "MEDIUM",
+      "rule_applied": "Senior Manager grade is entitled to 3AC Train / AC Bus. Actual fare with PNR required.",
+      "proof_required": "PNR / e-ticket + fare receipt",
+      "proof_status": "MISSING",
+      "matched_proofs": [],
+      "audit_note": "No proof submitted for return train journey. Please provide PNR or e-ticket for the Pune-Delhi 3AC trip on 08-Mar.",
+      "recommended_action": "Obtain PNR/e-ticket from employee."
+    }
+  ],
+  "breaches": [
+    {
+      "severity": "HIGH",
+      "clause": "Hotel rate Rs.2,400/night exceeds Grade A city cap for Senior Manager (Rs.2,000/night). 2 nights: claimed Rs.4,800 vs eligible Rs.4,000. Excess Rs.800.",
+      "entries": "Entry #2 (Hotel)",
+      "amount_at_risk": 800.0
+    },
+    {
+      "severity": "MEDIUM",
+      "clause": "Duplicate cab receipt submitted twice (Ride ID RIDE20240304001). flag_duplicate_receipts = True. Correctly rejected by reviewer.",
+      "entries": "Entry #6 (Cab duplicate)",
+      "amount_at_risk": 320.0
+    },
+    {
+      "severity": "MEDIUM",
+      "clause": "2 x 3AC Train entries without PNR or e-ticket. Internal debit voucher alone is insufficient proof of travel per policy.",
+      "entries": "Entries #1, #8",
+      "amount_at_risk": 2800.0
+    },
+    {
+      "severity": "LOW",
+      "clause": "Food allowance claimed at Rs.700/day. Senior Manager rate is Rs.600/day with overnight stay. Excess Rs.100/day x 2 days = Rs.200.",
+      "entries": "Entries #3, #4",
+      "amount_at_risk": 200.0
+    },
+    {
+      "severity": "LOW",
+      "clause": "Total claim Rs.9,770 exceeds manager_approval_threshold of Rs.10,000 — senior management approval documentation must be on file.",
+      "entries": "Entire voucher",
+      "amount_at_risk": 9770.0
+    }
+  ],
+  "history_notes": [],
+  "totals": {
+    "gross_claimed": 10090.0,
+    "reviewer_approved": 9770.0,
+    "gross_rejected": 320.0,
+    "policy_eligible": 8770.0,
+    "recommended_hold": 1000.0,
+    "net_payable": 9770.0
+  },
+  "recommendations": [
+    {
+      "id": "R-01",
+      "priority": "IMMEDIATE",
+      "text": "Obtain PNR or e-ticket copies for both 3AC Train entries (01-Mar and 08-Mar). Internal debit voucher alone is not accepted as travel proof."
+    },
+    {
+      "id": "R-02",
+      "priority": "IMMEDIATE",
+      "text": "Recover Rs.800 hotel excess (2 nights × Rs.400/night overage in Grade A city, Senior Manager cap is Rs.2,000/night). Alternatively, obtain VP/GM exception approval."
+    },
+    {
+      "id": "R-03",
+      "priority": "SHORT-TERM",
+      "text": "Adjust food allowance to Rs.600/day for Senior Manager grade (2 days = Rs.200 excess). Recover or adjust in next payable amount."
+    },
+    {
+      "id": "R-04",
+      "priority": "CONFIRMED",
+      "text": "Duplicate cab receipt (Entry #6, Rs.320) correctly rejected by reviewer. Confirm rejection is final and note in employee record."
+    },
+    {
+      "id": "R-05",
+      "priority": "LONG-TERM",
+      "text": "Implement pre-approved hotel booking channel with automatic Grade A/B/C city rate enforcement to prevent overage claims."
+    }
+  ],
+  "conclusion": "Expense Voucher No. 1001 submitted by Priya Mehta (SAMPLE001) for a Pune Client Visit (01-Mar-2024 to 08-Mar-2024) has been audited against the Example Company Travel & Reimbursement Policy effective 01-Jan-2024. The audit identified 5 policy concerns (1 High, 2 Medium, 2 Low). Proof quality is generally acceptable — hotel bill, UPI payment screenshot, cab receipt, and vendor invoice are all present and verifiable. The duplicate cab receipt was correctly rejected by the reviewer. Three material issues require resolution before final payment: (1) Hotel rate exceeds the Grade A city cap for Senior Manager — excess Rs.800 should be recovered or approved by exception. (2) PNR/e-tickets are missing for both train entries totalling Rs.2,800. (3) Food allowance rate is Rs.100/day over the Senior Manager limit for 2 days. Policy-eligible amount is Rs.8,770 against the Rs.9,770 reviewer-approved. A partial hold of Rs.1,000 is recommended until train PNRs are provided and hotel excess is resolved."
+}
