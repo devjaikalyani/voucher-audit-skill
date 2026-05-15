@@ -40,7 +40,7 @@ REM ── Paths ─────────────────────
 set SCRIPT_DIR=%~dp0
 set CREDS=%SCRIPT_DIR%google_creds.json
 set OUT_DIR=%SCRIPT_DIR%output
-set SHEET_ID=1aBIdbOrtYRaIOhskeOk3Rb59MLce8ixjnHr9UDkZl_k
+set SHEET_ID=YOUR_GOOGLE_SHEET_ID
 
 REM ── Check credentials ──────────────────────────────────────
 if not exist "%CREDS%" (
