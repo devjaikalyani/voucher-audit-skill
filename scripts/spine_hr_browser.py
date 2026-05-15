@@ -502,8 +502,10 @@ if __name__ == '__main__':
                     help='Login then dump the page DOM to history/spinehr_dump_YYYY-MM-DD.html')
     ap.add_argument('--dry-run', action='store_true',
                     help='List claims without downloading')
+    ap.add_argument('--headless', action='store_true',
+                    help='Run Chrome in headless mode (no visible window)')
     ap.add_argument('--max', type=int, default=50)
     args = ap.parse_args()
-    out = fetch_in_process_claims(headless=False, inspect=args.inspect,
+    out = fetch_in_process_claims(headless=args.headless, inspect=args.inspect,
                                    dry_run=args.dry_run, max_claims=args.max)
     print(json.dumps(out, indent=2))

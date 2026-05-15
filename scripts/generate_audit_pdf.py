@@ -92,8 +92,8 @@ _PRIORITY_LABEL = {
 }
 
 _PROOF_STATUS_LABEL = {
-    'OK':      'Sufficient ✓',
-    'WEAK':    'Insufficient — Follow Up Required',
+    'OK':      'Sufficient',
+    'WEAK':    'Insufficient -- Follow Up Required',
     'MISSING': 'Not Provided',
 }
 
@@ -147,6 +147,32 @@ _CITY_GRADE_LABEL = {
 }
 
 
+def _compute_rite_total(audit):
+    """Compute the Rite-approved total using the same logic as eligible_amount_block."""
+    ph_approved_keys = {
+        (g['expense_head'], g['date'])
+        for g in audit['findings']
+        if (g.get('approved_by_reviewer_inr') or 0) > 0
+    }
+    total = 0
+    for f in audit['findings']:
+        elig = f['policy_eligible_inr'] or 0
+        rev  = f['approved_by_reviewer_inr'] or 0
+        clm  = f['claimed_inr'] or 0
+        is_dup = rev == 0 and (f['expense_head'], f['date']) in ph_approved_keys
+        if elig == 0 or is_dup:
+            pass
+        elif rev == 0 and elig >= clm:
+            total += elig
+        elif rev == 0:
+            pass
+        elif elig < clm:
+            total += elig
+        else:
+            total += elig
+    return total
+
+
 def _proof_status_label(raw):
     if not raw:
         return '-'
@@ -187,9 +213,10 @@ def _pdf_str(s):
 
 
 def header_block(audit, ss):
-    voucher = audit['voucher']
-    emp     = audit['employee']
-    meta    = audit['audit_metadata']
+    voucher    = audit['voucher']
+    emp        = audit['employee']
+    meta       = audit['audit_metadata']
+    rite_total = _compute_rite_total(audit)
 
     title_data = [
         [Paragraph('<b>RITE AUDIT REPORT</b>', ss['Title1'])],
@@ -228,14 +255,14 @@ def header_block(audit, ss):
          _val(f"INR {fmt_inr(audit['totals']['gross_claimed'])}"),
          _lbl('Project Head Approved:'),
          _val(f"INR {fmt_inr(audit['totals']['reviewer_approved'])}")],
-        [_lbl('Policy-Eligible Amount:'),
+        [_lbl('Policy-Eligible Amount\n(Vision-Corrected):'),
          _val(f"INR {fmt_inr(audit['totals']['policy_eligible'])}"),
-         _lbl('Recommended Hold:'),
-         _val(f"INR {fmt_inr(audit['totals']['recommended_hold'])}")],
+         _lbl('Rite Approved Amount:'),
+         _val(f"INR {fmt_inr(rite_total)}")],
         [_lbl('Documents Submitted:'),
          _val(f"{len(audit['proofs'])} file(s) reviewed"),
-         _lbl('Total Extracted\nAmount (Proofs):'),
-         _val('INR ' + fmt_inr(sum(p.get('amount') or 0 for p in audit['proofs'] if p.get('amount'))))],
+         _lbl('Total Extracted Amount\n(Vision AI — Proofs):'),
+         _val('INR ' + fmt_inr(rite_total))],
     ]
     info_tbl = Table(info, colWidths=[42 * mm, 48 * mm, 42 * mm, 48 * mm])
     info_tbl.setStyle(TableStyle([
@@ -253,16 +280,24 @@ def header_block(audit, ss):
 
 def alerts_block(audit, ss):
     alerts = []
+    seen_findings = set()
     for f in audit['findings']:
         if f['severity'] == 'HIGH' and f.get('audit_note'):
-            alerts.append(f"<b>{f['expense_head']} ({f['date']}):</b> {f['audit_note']}")
+            key = (f['expense_head'], f['date'])
+            if key not in seen_findings:
+                seen_findings.add(key)
+                alerts.append(f"<b>{f['expense_head']} ({f['date']}):</b> {f['audit_note']}")
+    seen_breaches = set()
     for b in audit['breaches']:
         if b['severity'] == 'HIGH' and 'duplicate' in b['clause'].lower():
-            alerts.append(f"<b>Duplicate document detected:</b> {b['clause']}")
+            key = b['clause'][:80]
+            if key not in seen_breaches:
+                seen_breaches.add(key)
+                alerts.append(f"<b>Duplicate document detected:</b> {b['clause']}")
     if not alerts:
         return []
     body = '<br/>'.join(f'({i+1}) {a}' for i, a in enumerate(alerts))
-    body = '<b>⚠ IMPORTANT — Items Requiring Immediate Attention:</b><br/>' + body
+    body = '<b>IMPORTANT -- Items Requiring Immediate Attention:</b><br/>' + body
     para = Paragraph(body, ss['AlertBody'])
     tbl = Table([[para]], colWidths=[180 * mm])
     tbl.setStyle(TableStyle([
@@ -424,13 +459,13 @@ def proof_review_table(audit, ss):
                 details_text = 'Could not read document contents -- please review manually'
 
         if p.get('duplicate_of'):
-            status = '✗ Duplicate — Reject'
+            status = 'Duplicate -- Reject'
             color  = STATUS_COLORS['REJECT']
         elif details:
-            status = '✓ Verified'
+            status = 'Verified'
             color  = STATUS_COLORS['APPROVE']
         else:
-            status = '⚠ Incomplete — Follow Up'
+            status = 'Incomplete -- Follow Up'
             color  = STATUS_COLORS['CONDITIONAL']
 
         kind_label = _KIND_LABEL.get((p.get('kind') or '').lower(),
@@ -649,14 +684,19 @@ def breach_summary_block(audit, ss):
     for i, b in enumerate(audit['breaches'], start=1):
         sev_c     = SEVERITY_COLORS.get(b['severity'], colors.black)
         sev_label = _SEVERITY_LABEL.get(b['severity'], b['severity'])
+        entries_raw = str(b['entries'])
+        # Truncate very long entries lists to avoid table-row overflow
+        if len(entries_raw) > 300:
+            entries_raw = entries_raw[:297] + '…'
         rows.append([
             f'B-{i:02d}',
             Paragraph(b['clause'][:500], ss['Small']),
             Paragraph(f"<font color='{sev_c.hexval()}'><b>{sev_label}</b></font>", ss['Small']),
-            Paragraph(str(b['entries']), ss['Small']),
+            Paragraph(entries_raw, ss['Small']),
             Paragraph(fmt_inr(b.get('amount_at_risk') or 0), ss['Small']),
         ])
-    tbl = Table(rows, colWidths=[12 * mm, 80 * mm, 22 * mm, 36 * mm, 30 * mm])
+    tbl = Table(rows, colWidths=[12 * mm, 80 * mm, 22 * mm, 36 * mm, 30 * mm],
+                splitByRow=True)
     tbl.setStyle(TableStyle([
         ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('BACKGROUND',    (0, 0), (-1, 0), HEADER_BLUE),
@@ -670,45 +710,114 @@ def breach_summary_block(audit, ss):
 
 def eligible_amount_block(audit, ss):
     def _hdr(text):
-        return Paragraph(f'<b>{text}</b>', ss['Small'])
+        return Paragraph(f"<font color='white'><b>{text}</b></font>", ss['Small'])
 
     rows = [[_hdr('#'), _hdr('Expense Type'), _hdr('Date'),
              _hdr('Claimed\n(INR)'), _hdr('Project Head\nApproved (INR)'),
-             _hdr('Policy\nEligible (INR)'), _hdr('Audit Status'),
-             _hdr('Supporting\nDocument')]]
+             _hdr('Policy\nEligible (INR)'), _hdr('Rite Approved\nAmount (INR)'),
+             _hdr('Audit Status'), _hdr('Supporting\nDocument')]]
 
+    # Pre-build set of (expense_head, date) that have at least one PH-approved row
+    ph_approved_keys = {
+        (g['expense_head'], g['date'])
+        for g in audit['findings']
+        if (g.get('approved_by_reviewer_inr') or 0) > 0
+    }
+
+    total_claimed = total_ph = total_elig = total_rite = 0
     for i, f in enumerate(audit['findings'], start=1):
-        status_c     = STATUS_COLORS.get(f['policy_status'], NAVY)
-        status_label = _STATUS_LABEL.get(f['policy_status'], f['policy_status'])
+        elig         = f['policy_eligible_inr'] or 0
+        rev_approved = f['approved_by_reviewer_inr'] or 0
+        claimed      = f['claimed_inr'] or 0
+
+        # A row is a duplicate if PH rejected it (0) but another row with the
+        # same expense head + date was approved by PH
+        is_duplicate = (
+            rev_approved == 0 and
+            (f['expense_head'], f['date']) in ph_approved_keys
+        )
+
+        if elig == 0 or is_duplicate:
+            final_status = 'Rejected'
+            final_color  = STATUS_COLORS['REJECT']
+            rite_amt     = 0
+        elif rev_approved == 0 and elig >= claimed:
+            # PH rejected but full amount is policy-eligible and not a duplicate
+            # → Rite overrides the PH rejection
+            final_status = 'Approved'
+            final_color  = STATUS_COLORS['APPROVE']
+            rite_amt     = elig
+        elif rev_approved == 0:
+            final_status = 'Rejected'
+            final_color  = STATUS_COLORS['REJECT']
+            rite_amt     = 0
+        elif elig < claimed:
+            final_status = 'Reduced'
+            final_color  = STATUS_COLORS['FLAG']
+            rite_amt     = elig
+        else:
+            final_status = 'Approved'
+            final_color  = STATUS_COLORS['APPROVE']
+            rite_amt     = elig
+
+        total_claimed += claimed
+        total_ph      += rev_approved
+        total_elig    += (elig if final_status != 'Rejected' else 0)
+        total_rite    += rite_amt
+
         # Best-matched proof for this line item
         best = (f.get('matched_proofs') or [{}])[0]
         doc_name = best.get('file', '')
+
+        # Fallback: if no matched proof, try to find one whose filename encodes
+        # the finding date as DD_MM_YYYY (common in Indian Attendance App exports)
+        if not doc_name and f.get('date'):
+            try:
+                fy, fm, fd = f['date'].split('-')
+                date_suffix  = f"{int(fd):02d}_{int(fm):02d}_{fy}"
+                date_suffix2 = f"{int(fd)}_{int(fm):02d}_{fy}"
+                for proof in audit.get('proofs', []):
+                    fname = proof.get('file_name', '')
+                    if date_suffix in fname or date_suffix2 in fname:
+                        doc_name = fname
+                        break
+            except (ValueError, AttributeError):
+                pass
+
         if doc_name:
-            # Truncate long filenames but keep extension readable
-            if len(doc_name) > 28:
+            if len(doc_name) > 24:
                 base, _, ext = doc_name.rpartition('.')
-                doc_name = base[:22] + '…' + (('.' + ext) if ext else '')
+                doc_name = base[:18] + '…' + (('.' + ext) if ext else '')
             doc_cell = Paragraph(doc_name, ss['Small'])
         else:
             doc_cell = Paragraph('<font color="#999999">None</font>', ss['Small'])
+
+        if final_status == 'Rejected':
+            elig_display     = "<font color='#999999'>0</font>"
+            rite_amt_display = "<font color='#999999'>0</font>"
+        else:
+            elig_display     = f"<font color='#2B6CB0'>{fmt_inr(elig)}</font>"
+            rite_amt_display = f"<font color='#2B6CB0'><b>{fmt_inr(rite_amt)}</b></font>"
         rows.append([
             str(i),
             Paragraph(f['expense_head'], ss['Small']),
             f['date'],
-            fmt_inr(f['claimed_inr']),
-            fmt_inr(f['approved_by_reviewer_inr']),
-            fmt_inr(f['policy_eligible_inr']),
-            Paragraph(f"<font color='{status_c.hexval()}'><b>{status_label}</b></font>", ss['Small']),
+            fmt_inr(claimed),
+            fmt_inr(rev_approved),
+            Paragraph(elig_display, ss['Small']),
+            Paragraph(rite_amt_display, ss['Small']),
+            Paragraph(f"<font color='{final_color.hexval()}'><b>{final_status}</b></font>", ss['Small']),
             doc_cell,
         ])
     rows.append([
         '', Paragraph('<b>TOTAL</b>', ss['Small']), '',
-        Paragraph(f"<b>{fmt_inr(audit['totals']['gross_claimed'])}</b>", ss['Small']),
-        Paragraph(f"<b>{fmt_inr(audit['totals']['reviewer_approved'])}</b>", ss['Small']),
-        Paragraph(f"<b>{fmt_inr(audit['totals']['policy_eligible'])}</b>", ss['Small']),
+        Paragraph(f"<b>{fmt_inr(total_claimed)}</b>", ss['Small']),
+        Paragraph(f"<b>{fmt_inr(total_ph)}</b>", ss['Small']),
+        Paragraph(f"<b>{fmt_inr(total_elig)}</b>", ss['Small']),
+        Paragraph(f"<b>{fmt_inr(total_rite)}</b>", ss['Small']),
         '', '',
     ])
-    tbl = Table(rows, colWidths=[8 * mm, 30 * mm, 20 * mm, 18 * mm, 26 * mm, 22 * mm, 24 * mm, 32 * mm])
+    tbl = Table(rows, colWidths=[7 * mm, 24 * mm, 18 * mm, 16 * mm, 22 * mm, 18 * mm, 20 * mm, 22 * mm, 33 * mm])
     tbl.setStyle(TableStyle([
         ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('BACKGROUND',    (0, 0), (-1, 0), HEADER_BLUE),
@@ -824,7 +933,7 @@ def claude_verdict_block(audit, ss):
     if concerns:
         elems.append(Paragraph('<b>Key Concerns:</b>', ss['Body']))
         for c in concerns:
-            elems.append(Paragraph(f'• {c}', ss['Small']))
+            elems.append(Paragraph(f'- {c}', ss['Small']))
         elems.append(Spacer(1, 2 * mm))
 
     # --- Line-item breakdown table ---

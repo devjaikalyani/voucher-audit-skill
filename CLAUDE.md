@@ -2,6 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## !! MANDATORY — READ BEFORE DOING ANYTHING !!
+
+The **entire audit pipeline is already fully implemented**. Your job is to **call the existing scripts**, not to write new code.
+
+**To audit a new voucher:**
+```bash
+cd "D:\Company Projects\Voucher_Audit_Skill"
+python scripts/run_audit.py "path/to/voucher.pdf" "path/to/proofs.zip" --out-dir output/
+```
+This single command does everything: extracts the voucher, OCR-reads all proofs, runs policy evaluation, and produces the final PDF report.
+
+**Do NOT:**
+- Write your own voucher extraction code
+- Write your own proof OCR / parsing code
+- Write your own audit / policy evaluation code
+- Write your own PDF generation code
+- Produce your own audit JSON from scratch
+
+If you write any of the above yourself, the policy-eligible amounts, duplicate detection, Rite-approved totals, and PDF format will all be wrong.
+
+**Do NOT rewrite or modify `scripts/generate_audit_pdf.py`** — it is a complete, finalised renderer. Call it; don't recreate it.
+
+---
+
 ## Commands
 
 ### Install dependencies
@@ -65,10 +91,16 @@ generate_audit_pdf.py — ReportLab Platypus → 9-section A4 PDF
         │
         ▼
 output/audit_voucher_<N>.json
-output/PolicyBased_AuditReport_Voucher<N>_<Name>_<Code>.pdf
+output/RiteAuditReport_Voucher<N>_<Name>_<Code>.pdf
 ```
 
 `run_audit.py` is the one-shot wrapper that calls `audit_engine.run_audit()` then `generate_audit_pdf.render_pdf()`.
+
+> **IMPORTANT — do NOT rewrite or recreate `scripts/generate_audit_pdf.py`.**
+> It is a complete, finalized PDF renderer with custom layout logic, status colours,
+> duplicate-deduplication, and Rite-approved-amount calculations that took significant
+> iteration to calibrate. Any audit run must call `generate_audit_pdf.render_pdf(audit, out_path)`
+> or invoke the script directly — never write a new PDF generator from scratch.
 
 ### Key data contracts
 

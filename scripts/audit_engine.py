@@ -20,16 +20,39 @@ import sys, os, json, csv, re, argparse, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from extract_voucher import extract_voucher
 
-# Prefer Claude Vision OCR (more accurate); fall back to local tesseract if the
-# anthropic SDK isn't installed so the skill stays usable in any environment.
-try:
-    from ocr_proofs_claude import index_proofs_claude as index_proofs
-    _OCR_BACKEND = 'claude-vision'
-except ImportError as _e:
-    print(f"[audit_engine] Claude Vision OCR unavailable ({_e}); "
-          f"falling back to local tesseract.", file=sys.stderr)
-    from extract_proofs import index_proofs
-    _OCR_BACKEND = 'tesseract'
+# OCR backend
+# -----------
+# This skill is Cowork-orchestrated: the calling agent (Claude in Cowork mode)
+# does OCR by viewing each proof image via its native vision (Read tool) and
+# supplies the resulting proofs JSON to run_audit.py via --proofs-json.
+#
+# There is intentionally NO automatic OCR backend here:
+#   - Anthropic Claude-Vision API: removed (the May 2026 batch hit silent
+#     auth failures that produced empty proofs).
+#   - Tesseract: removed (low accuracy on small phone screenshots).
+#
+# Workflow:
+#   1. python scripts/cowork_stage.py <proofs.zip> --out <staging_dir>
+#      → extracts unique images and writes ocr_cache.template.json
+#   2. Agent reads each image via Read tool, fills ocr_cache.json
+#   3. python scripts/cowork_stage.py --build-proofs <ocr_cache.json> \
+#          <proofs.zip> <proofs.json>
+#   4. python scripts/run_audit.py <voucher.pdf> <proofs.zip> \
+#          --proofs-json <proofs.json>
+#
+# If audit_engine.run_audit() is invoked without a pre-built proofs JSON,
+# index_proofs raises a hard error pointing at this workflow.
+_OCR_BACKEND = 'cowork-vision'
+
+
+def index_proofs(zip_path, *args, **kwargs):
+    raise RuntimeError(
+        "Voucher Audit Skill is Cowork-vision-only — proofs OCR must be "
+        "supplied by the agent. Run scripts/cowork_stage.py to extract "
+        "images, fill ocr_cache.json by reading each image, then pass "
+        "the resulting proofs JSON to run_audit.py via --proofs-json. "
+        f"(zip={zip_path!r})"
+    )
 
 # Unolo GPS-distance loader -- used to verify two-wheeler / petrol claims
 try:
@@ -575,9 +598,30 @@ def evaluate_line(item, ctx):
         if with_stay and item.get('date') in ctx.get('hotel_checkout_dates', set()):
             with_stay = False
         rate = desig_data['food_with_stay'] if with_stay else desig_data['food_without_stay_over_12hr']
+        trip_days_ctx    = ctx.get('food_trip_days', 1)
+        food_trip_elig   = ctx.get('food_trip_elig', 0)
+        food_total_clm   = ctx.get('food_total_claimed', claimed)
+
         if rate == 'actual':
             finding['policy_eligible_inr'] = claimed
             finding['rule_applied'] = f'{_desig_label(designation)} grade: food at actual cost permitted.'
+        elif food_trip_elig == float('inf') or (food_trip_elig > 0 and food_total_clm <= food_trip_elig):
+            # Total food claimed for the trip is within the trip-level entitlement → approve full amount
+            finding['policy_eligible_inr'] = claimed
+            stay_note = 'with overnight stay' if with_stay else 'without overnight stay'
+            finding['rule_applied'] = (
+                f'{_desig_label(designation)} grade: Rs.{rate:,}/day ({stay_note}) x '
+                f'{trip_days_ctx} trip days = Rs.{food_trip_elig:,.0f} total entitlement. '
+                f'Total food claimed (Rs.{food_total_clm:,.0f}) is within the trip limit.'
+            )
+            finding['policy_status'] = 'APPROVE'
+            finding['severity'] = 'LOW'
+            finding['audit_note'] = (
+                f'Trip food entitlement: Rs.{rate:,}/day x {trip_days_ctx} days = '
+                f'Rs.{food_trip_elig:,.0f}. Total food claimed: Rs.{food_total_clm:,.0f}. '
+                f'Within policy limit — approved.'
+            )
+            finding['recommended_action'] = 'Approve as claimed.'
         else:
             finding['policy_eligible_inr'] = min(claimed, rate)
             stay_note = 'with overnight stay' if with_stay else 'without overnight stay (>12 hr trip)'
@@ -912,6 +956,10 @@ def evaluate_line(item, ctx):
     if finding['policy_status'] == 'CONDITIONAL' and finding['policy_eligible_inr'] is None:
         finding['policy_eligible_inr'] = claimed
 
+    # Policy-eligible must never exceed what the Project Head approved for this line.
+    # Reviewer's rejection is authoritative — we can flag it but cannot pay more.
+    finding['policy_eligible_inr'] = min(finding['policy_eligible_inr'] or 0, reviewer_approved)
+
     # Project Head approved vs policy-eligible delta
     eligible = finding['policy_eligible_inr'] or 0
     if reviewer_approved > eligible + 1:
@@ -1098,6 +1146,28 @@ def run_audit(voucher_pdf, proofs_zip, proofs_data=None, voucher_data=None, emp_
 
     has_hotel_stay = any(li['expense_head'] == 'Hotel' for li in voucher['line_items'])
 
+    # Trip-level food allowance entitlement: rate/day × trip_days
+    _food_desig    = policy.get('designations', {}).get(bucket, {})
+    _food_rate     = _food_desig.get('food_without_stay_over_12hr', 0)
+    _pf, _pt       = voucher.get('period_from'), voucher.get('period_to')
+    _trip_days     = 1
+    if _pf and _pt:
+        try:
+            _trip_days = max(1, (datetime.date.fromisoformat(_pt) - datetime.date.fromisoformat(_pf)).days + 1)
+        except Exception:
+            pass
+    if isinstance(_food_rate, str) and _food_rate.lower() == 'actual':
+        _food_trip_elig = float('inf')
+    else:
+        _food_trip_elig = (_food_rate or 0) * _trip_days
+    # Deduplicate by date: take the max claimed per food date (avoids duplicate rows inflating total)
+    _food_by_date = {}
+    for _li in voucher['line_items']:
+        if _li.get('expense_head') == 'Food Allowance':
+            _dt = _li.get('date', '')
+            _food_by_date[_dt] = max(_food_by_date.get(_dt, 0), _li.get('claimed_inr') or 0)
+    _food_total_claimed = sum(_food_by_date.values())
+
     ctx = {
         'policy':               policy,
         'designation_bucket':   bucket,
@@ -1111,6 +1181,10 @@ def run_audit(voucher_pdf, proofs_zip, proofs_data=None, voucher_data=None, emp_
         'period_to':            voucher.get('period_to'),
         # Gap 6: checkout dates for food allowance rate selection
         'hotel_checkout_dates': _hotel_checkout_dates(proofs),
+        # Trip-level food entitlement (rate/day × trip_days)
+        'food_trip_days':        _trip_days,
+        'food_trip_elig':        _food_trip_elig,
+        'food_total_claimed':    _food_total_claimed,
         # Group bill split: normalised set of all employee names for name matching
         'master_names': frozenset(
             _norm(row.get('Name') or '') for row in master.values() if row.get('Name')

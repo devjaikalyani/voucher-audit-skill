@@ -37,6 +37,55 @@ _load_shared_env()
 CLIENT = anthropic.Anthropic()
 MODEL  = "claude-haiku-4-5-20251001"
 
+
+# Sentinel exception. audit_engine.py treats this exactly like ImportError
+# and falls back to the local Tesseract OCR backend. Raised when the
+# Anthropic API can't actually be used (no key, bad key, network blocked,
+# org disabled, etc.) so we don't silently emit empty proof records.
+class OCRBackendUnavailable(ImportError):
+    pass
+
+
+_AUTH_ERR_HINTS = (
+    "api_key", "auth_token", "credentials", "Authorization",
+    "X-Api-Key", "Could not resolve authentication",
+    "authentication_error", "permission_error",
+    "401", "403",
+)
+
+
+def _looks_like_auth_error(exc):
+    msg = str(exc)
+    return any(h.lower() in msg.lower() for h in _AUTH_ERR_HINTS)
+
+
+def _preflight_check():
+    """Verify the Anthropic API is actually callable.
+
+    Runs a single cheap request before bulk OCR begins. If the API key is
+    missing/invalid or the SDK can't reach the endpoint, raises
+    OCRBackendUnavailable so the audit engine routes to Tesseract instead
+    of producing empty proof records (the bug seen in the May 2026 batch).
+    """
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise OCRBackendUnavailable(
+            "ANTHROPIC_API_KEY is not set. "
+            "Add it to .env.shared or export it; "
+            "audit will use local Tesseract instead."
+        )
+    try:
+        CLIENT.messages.create(
+            model=MODEL,
+            max_tokens=8,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+    except Exception as e:
+        if _looks_like_auth_error(e):
+            raise OCRBackendUnavailable(f"Claude Vision auth failed: {e}") from e
+        # Non-auth transient errors (rate limit, timeout) — let the real OCR
+        # path handle them; don't pre-emptively kill the run.
+        print(f"  [ocr] preflight warning (non-auth): {e}", file=sys.stderr)
+
 # Minimal system prompt — field definitions live in the tool schema now
 SYSTEM_TEXT = (
     "You are a receipt OCR engine for Rite Water Solutions expense auditing. "
@@ -425,7 +474,15 @@ def index_proofs_claude(zip_path, sync=False):
                           (~50% cheaper; adds 1-5 min polling wait).
     sync=True:            per-image sequential calls (faster for <=2 images
                           or when called with --sync flag).
+
+    NOTE: This module is no longer wired into the default audit path —
+    the skill is now Cowork-vision-only. The function remains importable
+    for ad-hoc legacy use, but raises OCRBackendUnavailable if the API
+    isn't actually usable instead of silently emitting empty proofs.
     """
+    # Fail fast if the API isn't actually usable.
+    _preflight_check()
+
     IMAGE_EXTS = {'jpg', 'jpeg', 'png', 'webp', 'tiff'}
 
     # Phase 1: collect all image files from the ZIP
@@ -488,6 +545,15 @@ def index_proofs_claude(zip_path, sync=False):
     if n_dupes:
         print(f"  Deduplication: {n_dupes} image(s) reused cached OCR "
               f"({n_unique} API call(s) made).", file=sys.stderr)
+
+    # Safety net: if EVERY image came back empty, the API is silently failing
+    # (auth error mid-stream, network drop, etc.). Bail out so the audit
+    # engine retries with Tesseract instead of producing a useless report.
+    if n_unique > 0 and all(not (ocr_cache.get(h) or {}) for h, _, _, _ in unique_images):
+        raise OCRBackendUnavailable(
+            f"All {n_unique} OCR call(s) returned empty results — "
+            "Claude Vision is not actually working. Falling back to Tesseract."
+        )
 
     # Phase 4: build proof records for every file (dupes reuse cached OCR)
     proofs = []
